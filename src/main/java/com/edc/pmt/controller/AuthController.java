@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,6 +39,13 @@ public class AuthController {
         if (!user.getPassword().equals(loginUser.getPassword())) {
             return ResponseEntity.status(401).body(Map.of("message", "Nom d'utilisateur ou mot de passe incorrect"));
         }
-        return ResponseEntity.ok(Map.of("message", "Connexion réussie"));
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("username", user.getUsername());
+        response.put("message", "Connexion réussie");
+        return ResponseEntity.ok(Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "message", "Connexion réussie"));
     }
 }
