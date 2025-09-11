@@ -1,5 +1,7 @@
 package com.edc.pmt.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -12,14 +14,16 @@ public class ProjectMember {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "projectMembers" })
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "projectMembers" })
     private User user;
 
     @Column(nullable = false, length = 20)
-    private String role; // ADMIN, MEMBER, OBSERVER
+    private String role;// ADMIN, MEMBER, OBSERVER
 
     // Getters et setters
     public Long getId() {

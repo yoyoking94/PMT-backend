@@ -21,8 +21,8 @@ public class AuthController {
     // Inscription
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody User newUser) {
-        if (userRepository.findByEmail(newUser.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body("Erreur : Le nom d'utilisateur existe déjà.");
+        if (userRepository.findByEmail(newUser.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body("Erreur : L'email existe déjà.");
         }
         userRepository.save(newUser);
         return ResponseEntity.ok("Inscription réussie");
@@ -31,20 +31,22 @@ public class AuthController {
     // Connexion
     @PostMapping("/signin")
     public ResponseEntity<?> signin(@RequestBody User loginUser) {
-        Optional<User> userOpt = userRepository.findByEmail(loginUser.getUsername());
+        Optional<User> userOpt = userRepository.findByEmail(loginUser.getEmail());
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(401).body("Nom d'utilisateur ou mot de passe incorrect");
+            return ResponseEntity.status(401).body("Email ou mot de passe incorrect");
         }
 
         User user = userOpt.get();
         if (!user.getPassword().equals(loginUser.getPassword())) {
-            return ResponseEntity.status(401).body("Nom d'utilisateur ou mot de passe incorrect");
+            return ResponseEntity.status(401).body("Email ou mot de passe incorrect");
         }
 
-        // Retourner id et username pour le frontend
+        // Retourner id et username/email pour le frontend
         return ResponseEntity.ok(Map.of(
                 "id", user.getId(),
                 "username", user.getUsername(),
+                "email", user.getEmail(),
                 "message", "Connexion réussie"));
     }
+
 }
