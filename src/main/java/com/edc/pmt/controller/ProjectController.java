@@ -36,7 +36,29 @@ public class ProjectController {
     @PostMapping
     public ResponseEntity<Project> createProject(@RequestBody Project project) {
         Project savedProject = projectRepository.save(project);
+        // Créer le membre administrateur à partir du créateur
+        User creator = userRepository.findById(savedProject.getCreateBy()).orElse(null);
+
+        if (creator != null) {
+            ProjectMember projectMember = new ProjectMember();
+            projectMember.setProject(savedProject);
+            projectMember.setUser(creator);
+            projectMember.setRole("ADMIN");
+            projectMemberRepository.save(projectMember);
+        }
+
         return ResponseEntity.ok(savedProject);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProject(@PathVariable Long id, @RequestParam Long userId) {
+        return projectRepository.findById(id).map(project -> {
+            if (!project.getCreateBy().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Non autorisé à supprimer ce projet.");
+            }
+            projectRepository.delete(project);
+            return ResponseEntity.ok(Map.of("message", "Projet supprimé."));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
@@ -146,5 +168,4 @@ public class ProjectController {
         boolean isMember = projectMemberRepository.existsByProjectIdAndUserId(projectId, user.getId());
         return ResponseEntity.ok(Map.of("exists", true, "isMember", isMember));
     }
-
-}
+};
