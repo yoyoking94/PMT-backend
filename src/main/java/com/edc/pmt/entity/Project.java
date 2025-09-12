@@ -2,6 +2,9 @@ package com.edc.pmt.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "projects")
@@ -21,6 +24,18 @@ public class Project {
 
     @Column(name = "create_by", nullable = false)
     private Long createBy; // Clé étrangère vers Users.id
+
+    @OneToMany(mappedBy = "project")
+    @JsonIgnoreProperties("project")
+    private List<ProjectMember> projectMembers;
+
+    public List<ProjectMember> getProjectMembers() {
+        return projectMembers;
+    }
+
+    public void setProjectMembers(List<ProjectMember> projectMembers) {
+        this.projectMembers = projectMembers;
+    }
 
     // Getters et setters
     public Long getId() {
