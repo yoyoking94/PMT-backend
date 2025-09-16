@@ -3,6 +3,9 @@ package com.edc.pmt.entity;
 import jakarta.persistence.*;
 import java.util.Set;
 
+/**
+ * Entité représentant un utilisateur.
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -11,20 +14,19 @@ public class User {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String username;
+    private String username; // Nom d’utilisateur
 
     @Column(nullable = false, unique = true, length = 100)
-    private String email;
+    private String email; // Email unique
 
     @Column(nullable = false, length = 255)
-    private String password;
+    private String password; // Mot de passe chiffré
 
-    // Relations (optionnel)
+    // Liste des participations de l'utilisateur à des projets
     @OneToMany(mappedBy = "user")
     private Set<ProjectMember> projectMembers;
 
-    // Getters et setters...
-
+    // Getters et setters
     public Long getId() {
         return id;
     }
@@ -56,4 +58,4 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-}
+};

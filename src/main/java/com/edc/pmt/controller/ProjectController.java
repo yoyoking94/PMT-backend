@@ -2,7 +2,7 @@ package com.edc.pmt.controller;
 
 import com.edc.pmt.entity.Project;
 import com.edc.pmt.entity.ProjectMember;
-import com.edc.pmt.entity.User;
+/* import com.edc.pmt.entity.User; */
 import com.edc.pmt.repository.ProjectMemberRepository;
 import com.edc.pmt.repository.ProjectRepository;
 import com.edc.pmt.repository.UserRepository;
@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 
@@ -21,10 +20,8 @@ public class ProjectController {
 
     @Autowired
     private ProjectRepository projectRepository;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private ProjectMemberRepository projectMemberRepository;
 
@@ -33,23 +30,21 @@ public class ProjectController {
         return projectRepository.findAll();
     }
 
+    // Création de projet avec ajout de l'admin
     @PostMapping
     public ResponseEntity<Project> createProject(@RequestBody Project project) {
         Project savedProject = projectRepository.save(project);
-        // Créer le membre administrateur à partir du créateur
-        User creator = userRepository.findById(savedProject.getCreateBy()).orElse(null);
-
-        if (creator != null) {
+        userRepository.findById(savedProject.getCreateBy()).ifPresent(creator -> {
             ProjectMember projectMember = new ProjectMember();
             projectMember.setProject(savedProject);
             projectMember.setUser(creator);
             projectMember.setRole("ADMIN");
             projectMemberRepository.save(projectMember);
-        }
-
+        });
         return ResponseEntity.ok(savedProject);
     }
 
+    // Suppression par le créateur
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProject(@PathVariable Long id, @RequestParam Long userId) {
         return projectRepository.findById(id).map(project -> {
@@ -61,6 +56,7 @@ public class ProjectController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    // Modification de projet (par le créateur uniquement)
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProject(@PathVariable Long id, @RequestBody Project updatedProject) {
         return projectRepository.findById(id).map(project -> {
@@ -75,35 +71,25 @@ public class ProjectController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    // Retirer un membre (admin uniquement)
     @DeleteMapping("/{projectId}/members/{memberId}")
     public ResponseEntity<?> removeMember(
             @PathVariable Long projectId,
             @PathVariable Long memberId,
             @RequestParam Long requesterId) {
         var projectOpt = projectRepository.findById(projectId);
-        if (projectOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Projet introuvable");
-        }
-        Project project = projectOpt.get();
-
-        if (!project.getCreateBy().equals(requesterId)) {
+        if (projectOpt.isEmpty() || !projectOpt.get().getCreateBy().equals(requesterId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Permission refusée");
         }
-
         var memberOpt = projectMemberRepository.findById(memberId);
-        if (memberOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Membre introuvable");
+        if (memberOpt.isEmpty() || !memberOpt.get().getProject().getId().equals(projectId)) {
+            return ResponseEntity.badRequest().body("Membre introuvable ou n'appartient pas à ce projet");
         }
-
-        ProjectMember member = memberOpt.get();
-        if (!member.getProject().getId().equals(projectId)) {
-            return ResponseEntity.badRequest().body("Le membre n’appartient pas à ce projet");
-        }
-
-        projectMemberRepository.delete(member);
+        projectMemberRepository.delete(memberOpt.get());
         return ResponseEntity.ok(Map.of("message", "Membre supprimé avec succès"));
     }
 
+    // Inviter un membre (admin uniquement)
     @PostMapping("/{projectId}/invite")
     public ResponseEntity<?> inviteMember(
             @PathVariable Long projectId,
@@ -111,61 +97,48 @@ public class ProjectController {
             @RequestParam String role,
             @RequestParam Long requesterId) {
         var projectOpt = projectRepository.findById(projectId);
-        if (projectOpt.isEmpty())
-            return ResponseEntity.badRequest().body("Projet introuvable");
-        Project project = projectOpt.get();
-
-        if (!project.getCreateBy().equals(requesterId)) {
+        if (projectOpt.isEmpty() || !projectOpt.get().getCreateBy().equals(requesterId)) {
             return ResponseEntity.status(403).body("Permission refusée");
         }
-
         var userOpt = userRepository.findByEmail(email);
-        if (userOpt.isEmpty())
+        if (userOpt.isEmpty()) {
             return ResponseEntity.badRequest().body("Utilisateur introuvable");
-        User user = userOpt.get();
-
-        // Vérification si l'utilisateur est déjà dans les membres du projet
+        }
         boolean isAlreadyMember = projectMemberRepository
                 .findByProjectId(projectId)
                 .stream()
-                .anyMatch(pm -> pm.getUser().getId().equals(user.getId()));
-
+                .anyMatch(pm -> pm.getUser().getId().equals(userOpt.get().getId()));
         if (isAlreadyMember) {
             return ResponseEntity.badRequest().body("Utilisateur déjà membre du projet");
         }
-
         ProjectMember pm = new ProjectMember();
-        pm.setProject(project);
-        pm.setUser(user);
+        pm.setProject(projectOpt.get());
+        pm.setUser(userOpt.get());
         pm.setRole(role);
         projectMemberRepository.save(pm);
-
         return ResponseEntity.ok(Map.of("message", "Membre invité avec succès"));
     }
 
+    // Liste des membres d'un projet
     @GetMapping("/{projectId}/members")
     public ResponseEntity<?> getProjectMembers(@PathVariable Long projectId) {
-        var projectOpt = projectRepository.findById(projectId);
-        if (projectOpt.isEmpty()) {
+        if (projectRepository.findById(projectId).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-
         List<ProjectMember> members = projectMemberRepository.findByProjectId(projectId);
-
         return ResponseEntity.ok(members);
     }
 
+    // Vérifier si un user est membre d'un projet
     @GetMapping("/{projectId}/isMember")
     public ResponseEntity<?> isUserMember(
             @PathVariable Long projectId,
             @RequestParam String email) {
-
         var userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             return ResponseEntity.ok(Map.of("exists", false, "isMember", false));
         }
-        User user = userOpt.get();
-        boolean isMember = projectMemberRepository.existsByProjectIdAndUserId(projectId, user.getId());
+        boolean isMember = projectMemberRepository.existsByProjectIdAndUserId(projectId, userOpt.get().getId());
         return ResponseEntity.ok(Map.of("exists", true, "isMember", isMember));
     }
-};
+}

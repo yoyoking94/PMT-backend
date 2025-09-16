@@ -1,9 +1,11 @@
 package com.edc.pmt.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.*;
 
+/**
+ * Entité représentant l'association d'un utilisateur à un projet.
+ */
 @Entity
 @Table(name = "project_members")
 public class ProjectMember {
@@ -12,18 +14,20 @@ public class ProjectMember {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Projet associé
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "projectMembers" })
     private Project project;
 
+    // Utilisateur associé
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "projectMembers" })
     private User user;
 
     @Column(nullable = false, length = 20)
-    private String role;// ADMIN, MEMBER, OBSERVER
+    private String role; // ADMIN, MEMBER, OBSERVER
 
     // Getters et setters
     public Long getId() {

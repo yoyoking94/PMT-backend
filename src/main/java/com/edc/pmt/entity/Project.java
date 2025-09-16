@@ -3,9 +3,11 @@ package com.edc.pmt.entity;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+/**
+ * Entité représentant un projet.
+ */
 @Entity
 @Table(name = "projects")
 public class Project {
@@ -14,28 +16,21 @@ public class Project {
     private Long id;
 
     @Column(nullable = false)
-    private String name;
+    private String name; // Nom du projet
 
     @Column(length = 1000)
-    private String description;
+    private String description; // Description
 
     @Column(nullable = false)
-    private LocalDate startDate;
+    private LocalDate startDate; // Date de début
 
     @Column(name = "create_by", nullable = false)
-    private Long createBy; // Clé étrangère vers Users.id
+    private Long createBy; // ID du créateur du projet
 
+    // Membres liés au projet
     @OneToMany(mappedBy = "project")
     @JsonIgnoreProperties("project")
     private List<ProjectMember> projectMembers;
-
-    public List<ProjectMember> getProjectMembers() {
-        return projectMembers;
-    }
-
-    public void setProjectMembers(List<ProjectMember> projectMembers) {
-        this.projectMembers = projectMembers;
-    }
 
     // Getters et setters
     public Long getId() {
@@ -76,5 +71,13 @@ public class Project {
 
     public void setCreateBy(Long createBy) {
         this.createBy = createBy;
+    }
+
+    public List<ProjectMember> getProjectMembers() {
+        return projectMembers;
+    }
+
+    public void setProjectMembers(List<ProjectMember> projectMembers) {
+        this.projectMembers = projectMembers;
     }
 };

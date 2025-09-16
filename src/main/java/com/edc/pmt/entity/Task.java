@@ -2,9 +2,11 @@ package com.edc.pmt.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+/**
+ * Entité représentant une tâche dans un projet.
+ */
 @Entity
 @Table(name = "tasks")
 public class Task {
@@ -14,29 +16,33 @@ public class Task {
     private Long id;
 
     @Column(nullable = false)
-    private String name;
+    private String name; // Nom de la tâche
 
     @Column(length = 1000)
-    private String description;
+    private String description; // Description
 
     @Column(name = "due_date", nullable = false)
-    private LocalDate dueDate;
+    private LocalDate dueDate; // Date d’échéance
 
     @Column(nullable = false, length = 10)
-    private String priority; // ex : "LOW", "MEDIUM", "HIGH"
+    private String priority; // Priorité (Basse, Moyenne, Haute)
 
+    @Column(nullable = false, length = 20)
+    private String status; // Status (Edute, en cours, test, fait)
+
+    // Projet auquel la tâche est liée
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "tasks" })
     private Project project;
 
+    // Utilisateur assigné à la tâche
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_to")
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private User assignedTo;
 
     // Getters et setters
-
     public Long getId() {
         return id;
     }
@@ -73,6 +79,14 @@ public class Task {
         return priority;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public void setPriority(String priority) {
         this.priority = priority;
     }
@@ -92,5 +106,4 @@ public class Task {
     public void setAssignedTo(User assignedTo) {
         this.assignedTo = assignedTo;
     }
-
-}
+};
