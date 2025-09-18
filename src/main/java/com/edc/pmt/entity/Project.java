@@ -1,83 +1,50 @@
 package com.edc.pmt.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
 
 /**
  * Entité représentant un projet.
  */
 @Entity
 @Table(name = "projects")
-public class Project {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = "projectMembers")
+public class Project implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Le nom est obligatoire")
+    @Size(max = 255)
     @Column(nullable = false)
-    private String name; // Nom du projet
+    private String name;
 
-    @Column(length = 1000)
-    private String description; // Description
+    @Size(max = 1000)
+    private String description;
 
+    @NotNull(message = "La date de début est obligatoire")
     @Column(nullable = false)
-    private LocalDate startDate; // Date de début
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate startDate;
 
+    @NotNull(message = "Le créateur est obligatoire")
     @Column(name = "create_by", nullable = false)
-    private Long createBy; // ID du créateur du projet
+    private Long createBy;
 
-    // Membres liés au projet
-    @OneToMany(mappedBy = "project")
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("project")
-    private List<ProjectMember> projectMembers;
-
-    // Getters et setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public Long getCreateBy() {
-        return createBy;
-    }
-
-    public void setCreateBy(Long createBy) {
-        this.createBy = createBy;
-    }
-
-    public List<ProjectMember> getProjectMembers() {
-        return projectMembers;
-    }
-
-    public void setProjectMembers(List<ProjectMember> projectMembers) {
-        this.projectMembers = projectMembers;
-    }
-};
+    private Set<ProjectMember> projectMembers;
+}

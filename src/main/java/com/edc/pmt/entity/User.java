@@ -1,61 +1,44 @@
 package com.edc.pmt.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import java.io.Serializable;
 import java.util.Set;
+import lombok.*;
 
 /**
  * Entité représentant un utilisateur.
  */
 @Entity
 @Table(name = "users")
-public class User {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = "projectMembers")
+public class User implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Le nom d’utilisateur est obligatoire")
+    @Size(max = 50)
     @Column(nullable = false, unique = true, length = 50)
-    private String username; // Nom d’utilisateur
+    private String username;
 
+    @NotBlank(message = "L’email est obligatoire")
+    @Email(message = "Email invalide")
+    @Size(max = 100)
     @Column(nullable = false, unique = true, length = 100)
-    private String email; // Email unique
+    private String email;
 
+    @NotBlank(message = "Le mot de passe est obligatoire")
+    @Size(max = 255)
     @Column(nullable = false, length = 255)
-    private String password; // Mot de passe chiffré
+    private String password;
 
-    // Liste des participations de l'utilisateur à des projets
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProjectMember> projectMembers;
-
-    // Getters et setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-};
+}

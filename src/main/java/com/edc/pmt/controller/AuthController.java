@@ -1,10 +1,11 @@
 package com.edc.pmt.controller;
 
 import com.edc.pmt.entity.User;
-import com.edc.pmt.repository.UserRepository;
+import com.edc.pmt.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Map;
 import java.util.Optional;
 
@@ -13,24 +14,26 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final AuthService authService;
 
-    // Inscription utilisateur
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody User newUser) {
-        if (userRepository.findByEmail(newUser.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Erreur : L'email existe déjà.");
-        }
-        userRepository.save(newUser);
-        return ResponseEntity.ok("Inscription réussie");
+    @Autowired
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
-    // Connexion utilisateur
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody User newUser) {
+        String result = authService.signup(newUser);
+        if (result.startsWith("Erreur")) {
+            return ResponseEntity.badRequest().body(result);
+        }
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping("/signin")
     public ResponseEntity<?> signin(@RequestBody User loginUser) {
-        Optional<User> userOpt = userRepository.findByEmail(loginUser.getEmail());
-        if (userOpt.isEmpty() || !userOpt.get().getPassword().equals(loginUser.getPassword())) {
+        Optional<User> userOpt = authService.signin(loginUser);
+        if (userOpt.isEmpty()) {
             return ResponseEntity.status(401).body("Email ou mot de passe incorrect");
         }
         User user = userOpt.get();

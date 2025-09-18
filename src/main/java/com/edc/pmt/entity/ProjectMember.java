@@ -1,64 +1,37 @@
 package com.edc.pmt.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.*;
+import jakarta.validation.constraints.*;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-/**
- * Entité représentant l'association d'un utilisateur à un projet.
- */
 @Entity
 @Table(name = "project_members")
-public class ProjectMember {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = { "project", "user" })
+public class ProjectMember implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Projet associé
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "project_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "projectMembers" })
     private Project project;
 
-    // Utilisateur associé
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "projectMembers" })
     private User user;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String role; // ADMIN, MEMBER, OBSERVER
-
-    // Getters et setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Project getProject() {
-        return project;
-    }
-
-    public void setProject(Project project) {
-        this.project = project;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-};
+    private Role role;
+}
