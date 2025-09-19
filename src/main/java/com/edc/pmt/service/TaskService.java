@@ -43,22 +43,35 @@ public class TaskService {
             throw new IllegalArgumentException("Tâche non trouvée");
         }
         Task task = optionalTask.get();
+
+        // Vérification permission (identique à ton code actuel)
         var project = task.getProject();
         boolean isAdmin = project.getProjectMembers().stream()
                 .anyMatch(pm -> pm.getUser().getId().equals(userId) && pm.getRole() == Role.ADMIN);
-
         if (!isAdmin
                 && (task.getAssignedTo() == null || !task.getAssignedTo().getId().equals(userId))
                 && !project.getCreateBy().equals(userId)) {
             throw new IllegalAccessException("Vous n'êtes pas autorisé à modifier cette tâche");
         }
 
+        // Vérification que assignedTo est membre du projet
+        if (updatedTask.getAssignedTo() != null) {
+            boolean isMember = project.getProjectMembers().stream()
+                    .anyMatch(pm -> pm.getUser().getId().equals(updatedTask.getAssignedTo().getId()));
+            if (!isMember) {
+                throw new IllegalArgumentException("L'utilisateur assigné n'est pas membre du projet");
+            }
+        }
+
+        // Mise à jour des champs y compris assignedTo
         task.setName(updatedTask.getName());
         task.setDescription(updatedTask.getDescription());
         task.setDueDate(updatedTask.getDueDate());
         task.setPriority(updatedTask.getPriority());
         task.setStatus(updatedTask.getStatus());
+        task.setAssignedTo(updatedTask.getAssignedTo());
 
         return taskRepository.save(task);
     }
+
 }
