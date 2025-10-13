@@ -2,8 +2,10 @@ package com.edc.pmt.Services;
 
 import com.edc.pmt.Entities.Tache;
 import com.edc.pmt.Entities.AssignationTache;
+import com.edc.pmt.Entities.Utilisateur;
 import com.edc.pmt.Repository.TacheRepository;
 import com.edc.pmt.Repository.AssignationTacheRepository;
+import com.edc.pmt.Repository.UtilisateurRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,11 +18,19 @@ public class TacheService {
 
     private final TacheRepository tacheRepo;
     private final AssignationTacheRepository assignationRepo;
+    private final UtilisateurRepository utilisateurRepo;
+    private final EmailService emailService;
 
     @Autowired
-    public TacheService(TacheRepository tacheRepo, AssignationTacheRepository assignationRepo) {
+    public TacheService(
+            TacheRepository tacheRepo,
+            AssignationTacheRepository assignationRepo,
+            UtilisateurRepository utilisateurRepo,
+            EmailService emailService) {
         this.tacheRepo = tacheRepo;
         this.assignationRepo = assignationRepo;
+        this.utilisateurRepo = utilisateurRepo;
+        this.emailService = emailService;
     }
 
     public List<Tache> getTachesByProjet(Long projetId) {
@@ -54,6 +64,17 @@ public class TacheService {
             newAssign.setUtilisateurId(membreId);
             assignationRepo.save(newAssign);
             saved.setMembreId(membreId);
+
+            // Envoi d'un mail à l'utilisateur assigné
+            Optional<Utilisateur> utilisateurOpt = utilisateurRepo.findById(membreId);
+            utilisateurOpt.ifPresent(utilisateur -> {
+                String email = utilisateur.getEmail();
+                String sujet = "Nouvelle tâche assignée : " + tache.getNom();
+                String corps = "Bonjour,\n\nVous avez été assigné(e) à la tâche suivante : " + tache.getNom()
+                        + "\n\nDescription : " + tache.getDescription()
+                        + "\n\nMerci de prendre en compte cette assignation.\n\nCordialement,\nL'équipe PMT";
+                emailService.sendSimpleMessage(email, sujet, corps);
+            });
         }
         return saved;
     }
@@ -88,6 +109,17 @@ public class TacheService {
                     assign.setUtilisateurId(newMembreId);
                     assignationRepo.save(assign);
                     tache.setMembreId(newMembreId);
+
+                    // Envoi mail si la tâche est réassignée à un nouvel utilisateur
+                    Optional<Utilisateur> utilisateurOpt = utilisateurRepo.findById(newMembreId);
+                    utilisateurOpt.ifPresent(utilisateur -> {
+                        String email = utilisateur.getEmail();
+                        String sujet = "Tâche réassignée : " + tache.getNom();
+                        String corps = "Bonjour,\n\nVous avez été réassigné(e) à la tâche suivante : " + tache.getNom()
+                                + "\n\nDescription : " + tache.getDescription()
+                                + "\n\nMerci de prendre en compte cette assignation.\n\nCordialement,\nL'équipe PMT";
+                        emailService.sendSimpleMessage(email, sujet, corps);
+                    });
                 }
             } else if (newMembreId != null) {
                 AssignationTache newAssign = new AssignationTache();
@@ -95,6 +127,17 @@ public class TacheService {
                 newAssign.setUtilisateurId(newMembreId);
                 assignationRepo.save(newAssign);
                 tache.setMembreId(newMembreId);
+
+                // Envoi mail à nouveau membre assigné
+                Optional<Utilisateur> utilisateurOpt = utilisateurRepo.findById(newMembreId);
+                utilisateurOpt.ifPresent(utilisateur -> {
+                    String email = utilisateur.getEmail();
+                    String sujet = "Nouvelle tâche assignée : " + tache.getNom();
+                    String corps = "Bonjour,\n\nVous avez été assigné(e) à la tâche suivante : " + tache.getNom()
+                            + "\n\nDescription : " + tache.getDescription()
+                            + "\n\nMerci de prendre en compte cette assignation.\n\nCordialement,\nL'équipe PMT";
+                    emailService.sendSimpleMessage(email, sujet, corps);
+                });
             }
         } else if ("membre".equalsIgnoreCase(userRole)) {
             tache.setStatut(updated.getStatut());
