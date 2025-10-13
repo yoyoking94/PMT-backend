@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
 import java.sql.Date;
 
 @Data
@@ -42,6 +43,9 @@ public class Tache {
     @Column(name = "createur_id")
     private Long createurId;
 
+    @Transient
+    private Long membreId;
+
     public enum Priorite {
         faible, moyenne, haute
     }
@@ -49,7 +53,4 @@ public class Tache {
     public enum Statut {
         a_faire, en_cours, terminee, bloquee
     }
-
-    @Transient
-    private Long membreId;
 }

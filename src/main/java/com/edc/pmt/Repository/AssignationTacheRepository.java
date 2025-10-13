@@ -8,6 +8,4 @@ import java.util.List;
 @Repository
 public interface AssignationTacheRepository extends JpaRepository<AssignationTache, Long> {
     List<AssignationTache> findByTacheId(Long tacheId);
-
-    List<AssignationTache> findByUtilisateurId(Long utilisateurId);
 }

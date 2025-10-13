@@ -6,8 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.sql.Date;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/taches")
@@ -43,7 +43,7 @@ public class TacheController {
             tache.setDescription(body.get("description") != null ? body.get("description").toString() : null);
 
             if (body.get("dateEcheance") != null) {
-                tache.setDateEcheance(Date.valueOf(body.get("dateEcheance").toString()));
+                tache.setDateEcheance(java.sql.Date.valueOf(body.get("dateEcheance").toString()));
             }
 
             Object prioriteObj = body.get("priorite");
@@ -51,7 +51,7 @@ public class TacheController {
                 return ResponseEntity.badRequest().body("priorite manquante");
             tache.setPriorite(Tache.Priorite.valueOf(prioriteObj.toString()));
 
-            tache.setStatut(Tache.Statut.a_faire); // valeur par défaut comme avant
+            tache.setStatut(Tache.Statut.a_faire); // par défaut
 
             Object createurIdObj = body.get("createurId");
             if (createurIdObj != null) {
@@ -65,12 +65,30 @@ public class TacheController {
 
             Tache saved = tacheService.createTacheEtAssigner(tache, membreId);
             return ResponseEntity.ok(saved);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Erreur interne sur serveur");
         }
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateTache(
+            @PathVariable Long id,
+            @RequestBody Tache tache,
+            @RequestParam Long userId,
+            @RequestParam String userRole) {
+        Optional<Tache> updated = tacheService.updateTache(id, tache, userId, userRole);
+        if (updated.isPresent()) {
+            return ResponseEntity.ok(updated.get());
+        } else {
+            return ResponseEntity.status(403).body("Accès refusé ou permission insuffisante");
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Tache> getTacheById(@PathVariable Long id) {
+        return tacheService.getTacheById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
