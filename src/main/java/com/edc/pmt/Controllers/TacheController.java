@@ -46,7 +46,7 @@ public class TacheController {
 
             tache.setDescription(body.get("description") != null ? body.get("description").toString() : null);
 
-            if (body.get("dateEcheance") != null) {
+            if (body.get("dateEcheance") != null && !body.get("dateEcheance").toString().isEmpty()) {
                 tache.setDateEcheance(java.sql.Date.valueOf(body.get("dateEcheance").toString()));
             }
 
@@ -87,6 +87,15 @@ public class TacheController {
         } else {
             return ResponseEntity.status(403).body("Accès refusé ou permission insuffisante");
         }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteTache(@PathVariable Long id) {
+        if (!tacheService.getTacheById(id).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        tacheService.deleteTache(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{id}")
