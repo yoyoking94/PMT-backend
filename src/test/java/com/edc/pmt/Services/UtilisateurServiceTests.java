@@ -1,8 +1,7 @@
-package com.edc.pmt;
+package com.edc.pmt.Services;
 
 import com.edc.pmt.Entities.Utilisateur;
 import com.edc.pmt.Repository.UtilisateurRepository;
-import com.edc.pmt.Services.UtilisateurService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

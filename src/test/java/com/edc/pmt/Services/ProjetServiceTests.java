@@ -1,10 +1,9 @@
-package com.edc.pmt;
+package com.edc.pmt.Services;
 
 import com.edc.pmt.Entities.MembreProjet;
 import com.edc.pmt.Entities.Projet;
 import com.edc.pmt.Repository.MembreProjetRepository;
 import com.edc.pmt.Repository.ProjetRepository;
-import com.edc.pmt.Services.ProjetService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
